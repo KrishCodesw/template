@@ -8,7 +8,7 @@ export async function getStockCandles(symbol: string, from: number, to: number) 
       symbol,
       resolution: 'D',
       from,
-      to,
+      to,                   
       token: process.env.FINNHUB_API_KEY
     }
   });
