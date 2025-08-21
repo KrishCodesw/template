@@ -11,7 +11,7 @@ export async function GET(req: Request) {
     return NextResponse.json(repos);
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to fetch repos" },
+      { error: "Failed to to fetch repos" },
       { status: 500 }
     );
   }
