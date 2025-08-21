@@ -15,7 +15,7 @@ const res=await axios.get(url,{
 })
 return res.data.items;
 }
-catch(error:any){
+catch(error: any){
     throw new Error(
          `Failed to fetch repos: ${error.response?.status} ${error.response?.statusText}`
     );
