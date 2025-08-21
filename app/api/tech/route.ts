@@ -9,7 +9,7 @@ export async function GET(req: Request) {
   try {
     const repos = await fetchReposByStack(stack);
     return NextResponse.json(repos);
-  } catch (error) {
+  } catch  {
     return NextResponse.json(
       { error: "Failed to to fetch repos" },
       { status: 500 }
