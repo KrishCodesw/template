@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios,{AxiosError} from "axios";
 
 export async function fetchReposByStack(
   stack: string,
@@ -15,9 +15,12 @@ const res=await axios.get(url,{
 })
 return res.data.items;
 }
-catch(error: any){
-    throw new Error(
-         `Failed to fetch repos: ${error.response?.status} ${error.response?.statusText}`
-    );
-}
+catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        `Failed to fetch repos: ${error.response?.status} ${error.response?.statusText}`
+      );
+    }
+    throw new Error("Failed to fetch repos: Unknown error");
+  }
 }
