@@ -21,6 +21,6 @@ catch (error) {
         `Failed to fetch repos: ${error.response?.status} ${error.response?.statusText}`
       );
     }
-    throw new Error("Failed to fetch repos: Unknown error");
+    throw new Error("Failed to to fetch repos: Unknown error");
   }
 }
