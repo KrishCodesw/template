@@ -5,7 +5,7 @@ export async function fetchReposByStack(
   sort: "stars" | "forks" | "updated" = "stars",
   order: "asc" | "desc" = "desc"
 ){
-const url = `https://api.github.com/search/repositories?q=${stack}+language:${stack}&sort=${sort}&order=${order}&per_page=20`;
+const url = `https://api.github.com/search/repositories?q=${stack}+language:${stack}&sort=${sort}&order=${order}&per_page=100`;
 
 try{
 const res=await axios.get(url,{
