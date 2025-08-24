@@ -11,3 +11,12 @@ export interface Repo {
   pushed_at: string;
   language: string;
 }
+
+export interface RepoFilters {
+  stargazers_count?: number;
+  forks_count?: number;
+  open_issues_count?: number;
+  language?: string;
+  sortBy?: "stars" | "forks" | "issues" | "updated";
+  order?: "asc" | "desc";
+}
