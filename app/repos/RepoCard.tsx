@@ -37,7 +37,9 @@ export default function RepoCard({ repo, onBookmark, onUpvote }: any) {
         <div className="flex gap-4 text-sm text-gray-300 mt-1">
           <span>⭐ {repo.stargazers_count}</span>
           <span>🍴 {repo.forks}</span>
+          <span>{repo.language}</span>
         </div>
+        <span>Number of issues: {repo.open_issues}</span>
       </div>
 
       {/* Description */}
