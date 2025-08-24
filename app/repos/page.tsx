@@ -37,12 +37,7 @@ export default function ReposPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {repos.map((repo) => (
-            <RepoCard
-              key={repo.id}
-              repo={repo}
-              onBookmark={(r: any) => console.log("Bookmark", r)}
-              onUpvote={(r: any) => console.log("Upvote", r)}
-            />
+            <RepoCard key={repo.id} repo={repo} />
           ))}
         </div>
       )}
