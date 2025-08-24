@@ -31,13 +31,18 @@ export default function ReposPage() {
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-4">Open Source Repo Finder</h1>
-      <FilterBar filters={filters} setFilters={setFilters} />
+      {/* <FilterBar filters={filters} setFilters={setFilters} /> */}
       {loading ? (
         <p>Loading...</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {repos.map((repo) => (
-            <RepoCard key={repo.id} repo={repo} />
+            <RepoCard
+              key={repo.id}
+              repo={repo}
+              onBookmark={(r: any) => console.log("Bookmark", r)}
+              onUpvote={(r: any) => console.log("Upvote", r)}
+            />
           ))}
         </div>
       )}
