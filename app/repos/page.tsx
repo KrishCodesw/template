@@ -10,7 +10,7 @@ export default function ReposPage() {
   const [repos, setRepos] = useState<Repo[]>([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
-    stack: "javascript",
+    stack: "Flutter",
     sort: "stars",
     order: "desc",
   });
