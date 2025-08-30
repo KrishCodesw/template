@@ -20,3 +20,11 @@ export interface RepoFilters {
   sortBy?: "stars" | "forks" | "issues" | "updated";
   order?: "asc" | "desc";
 }
+
+type Filters = {
+  stack: string;
+  stars: string;
+  issues: string;
+  activity: string;
+  forks: string;
+};

@@ -10,7 +10,7 @@ export default function ReposPage() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState(searchQuery); // ✅ new
+  const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
   const [filters, setFilters] = useState({
     stack: "",
     stars: "",
@@ -18,17 +18,17 @@ export default function ReposPage() {
     activity: "",
     forks: "",
   });
+  const [userTriggered, setUserTriggered] = useState(false); // 🚨 NEW
 
-  // ✅ Debounce effect: waits 800ms after typing before updating debouncedQuery
+  // ✅ Debounce typing
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedQuery(searchQuery);
     }, 800);
-
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
-  // reset page when search/filters change
+  // Reset page on new search/filter
   useEffect(() => {
     setPage(1);
   }, [debouncedQuery, filters]);
@@ -39,18 +39,21 @@ export default function ReposPage() {
     (async function loadRepos() {
       setLoading(true);
 
-      // combine search + stack
-      const qParts: string[] = [];
-      if (debouncedQuery) qParts.push(debouncedQuery);
-      if (filters.stack) qParts.push(`language:${filters.stack}`);
-      const q = qParts.join(" ") || "stars:>0";
+      // 🚨 Default sample query until user triggers
+      let q: string;
+      if (!userTriggered) {
+        q = "react language:javascript"; // sample repos
+      } else {
+        const qParts: string[] = [];
+        if (debouncedQuery) qParts.push(debouncedQuery);
+        if (filters.stack) qParts.push(`language:${filters.stack}`);
+        q = qParts.join(" ") || "stars:>0";
+      }
 
       const params = new URLSearchParams({
         q,
         page: String(page),
         per_page: "30",
-        // let client-side handle final sort; don't force stars desc here
-        // sort: "", order: ""
       });
 
       try {
@@ -61,7 +64,7 @@ export default function ReposPage() {
 
         const sorted = [...data];
 
-        // build comparators only for active filters
+        // sort according to filters
         const rules = [
           {
             key: "stars",
@@ -97,7 +100,6 @@ export default function ReposPage() {
             return 0;
           });
         } else {
-          // sensible default
           sorted.sort((a, b) => b.stargazers_count - a.stargazers_count);
         }
 
@@ -110,7 +112,7 @@ export default function ReposPage() {
     })();
 
     return () => controller.abort();
-  }, [page, debouncedQuery, filters]);
+  }, [page, debouncedQuery, filters, userTriggered]);
 
   return (
     <div className="p-6">
@@ -122,11 +124,17 @@ export default function ReposPage() {
           type="text"
           placeholder="Search by repo name..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setUserTriggered(true); // 🚨 Mark as user triggered
+          }}
           className="border px-3 py-2 rounded w-full"
         />
         <button
-          onClick={() => setDebouncedQuery(searchQuery.trim())} // ✅ manual trigger
+          onClick={() => {
+            setDebouncedQuery(searchQuery.trim());
+            setUserTriggered(true); // 🚨 Mark as user triggered
+          }}
           className="px-4 py-2 bg-blue-600 text-white rounded"
         >
           Search
@@ -134,7 +142,13 @@ export default function ReposPage() {
       </div>
 
       {/* Filters */}
-      <FilterBar filters={filters} setFilters={setFilters} />
+      <FilterBar
+        filters={filters}
+        setFilters={(f: any) => {
+          setFilters(f);
+          setUserTriggered(true);
+        }}
+      />
 
       {loading ? (
         <p>Loading...</p>
@@ -145,6 +159,7 @@ export default function ReposPage() {
           ))}
         </div>
       )}
+
       <div className="flex justify-center gap-4 mt-6">
         <button
           onClick={() => setPage((p) => Math.max(p - 1, 1))}
