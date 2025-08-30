@@ -65,37 +65,38 @@ export default function ReposPage() {
         const sorted = [...data];
 
         // sort according to filters
+        // Build rules dynamically with order included
         const rules = [
           {
             key: "stars",
             cmp: (a: Repo, b: Repo) => a.stargazers_count - b.stargazers_count,
+            order: filters.stars,
           },
           {
             key: "issues",
             cmp: (a: Repo, b: Repo) =>
               a.open_issues_count - b.open_issues_count,
+            order: filters.issues,
           },
           {
             key: "activity",
             cmp: (a: Repo, b: Repo) =>
               new Date(a.pushed_at).getTime() - new Date(b.pushed_at).getTime(),
+            order: filters.activity,
           },
           {
             key: "forks",
             cmp: (a: Repo, b: Repo) => a.forks_count - b.forks_count,
+            order: filters.forks,
           },
-        ].filter(
-          (r) =>
-            (filters as any)[r.key] === "asc" ||
-            (filters as any)[r.key] === "desc"
-        );
+        ].filter((r) => r.order === "asc" || r.order === "desc");
 
+        // Then your sort:
         if (rules.length) {
           sorted.sort((a, b) => {
             for (const r of rules) {
               const diff = r.cmp(a, b);
-              if (diff !== 0)
-                return (filters as any)[r.key] === "asc" ? diff : -diff;
+              if (diff !== 0) return r.order === "asc" ? diff : -diff;
             }
             return 0;
           });
