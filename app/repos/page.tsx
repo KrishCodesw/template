@@ -7,100 +7,135 @@ import FilterBar from "./Filters";
 
 export default function ReposPage() {
   const [repos, setRepos] = useState<Repo[]>([]);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState(searchQuery); // ✅ new
   const [filters, setFilters] = useState({
-    stack: "", // Tech bucket default
-    stars: "", // Stars ↓ (high → low)
-    issues: "", // Issues ↓ (high → low)
-    activity: "", // Activity ↓ (recent first)
-    forks: "", // Forks ↓ (high → low)
+    stack: "",
+    stars: "",
+    issues: "",
+    activity: "",
+    forks: "",
   });
 
-  // useEffect(() => {
-  //   async function loadRepos() {
-  //     setLoading(true);
-  //     const res = await fetch(
-  //       `/api/repos?stack=${filters.stack}&sort=stars&order=desc` // always fetch plenty
-  //     );
-  //     const data = await res.json();
+  // ✅ Debounce effect: waits 800ms after typing before updating debouncedQuery
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 800);
 
-  //     let sortedData = [...data];
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
-  //     if (filters.sort === "stars") {
-  //       sortedData.sort((a, b) => a.stargazers_count - b.stargazers_count);
-  //     } else if (filters.sort === "issues") {
-  //       sortedData.sort((a, b) => a.open_issues_count - b.open_issues_count);
-  //     } else if (filters.sort === "forks") {
-  //       sortedData.sort((a, b) => a.forks_count - b.forks_count);
-  //     }
-
-  //     setRepos(sortedData);
-  //     setLoading(false);
-  //   }
-  //   loadRepos();
-  // }, [filters]);
+  // reset page when search/filters change
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedQuery, filters]);
 
   useEffect(() => {
-    async function loadRepos() {
+    const controller = new AbortController();
+
+    (async function loadRepos() {
       setLoading(true);
 
-      const res = await fetch(
-        `/api/repos?stack=${filters.stack}&sort=stars&order=desc`
-      );
-      const data = await res.json();
-      let sortedData = [...data];
+      // combine search + stack
+      const qParts: string[] = [];
+      if (debouncedQuery) qParts.push(debouncedQuery);
+      if (filters.stack) qParts.push(`language:${filters.stack}`);
+      const q = qParts.join(" ") || "stars:>0";
 
-      sortedData.sort((a, b) => {
-        // Stars
-        if (filters.stars === "asc") {
-          if (a.stargazers_count !== b.stargazers_count)
-            return a.stargazers_count - b.stargazers_count;
-        } else {
-          if (a.stargazers_count !== b.stargazers_count)
-            return b.stargazers_count - a.stargazers_count;
-        }
-
-        // Issues
-        if (filters.issues === "asc") {
-          if (a.open_issues_count !== b.open_issues_count)
-            return a.open_issues_count - b.open_issues_count;
-        } else {
-          if (a.open_issues_count !== b.open_issues_count)
-            return b.open_issues_count - a.open_issues_count;
-        }
-
-        // Activity (use pushed_at as last commit time)
-        if (filters.activity === "asc") {
-          if (a.pushed_at !== b.pushed_at)
-            return (
-              new Date(a.pushed_at).getTime() - new Date(b.pushed_at).getTime()
-            );
-        } else {
-          if (a.pushed_at !== b.pushed_at)
-            return (
-              new Date(b.pushed_at).getTime() - new Date(a.pushed_at).getTime()
-            );
-        }
-
-        // Forks
-        if (filters.forks === "asc") {
-          return a.forks_count - b.forks_count;
-        } else {
-          return b.forks_count - a.forks_count;
-        }
+      const params = new URLSearchParams({
+        q,
+        page: String(page),
+        per_page: "30",
+        // let client-side handle final sort; don't force stars desc here
+        // sort: "", order: ""
       });
 
-      setRepos(sortedData);
-      setLoading(false);
-    }
+      try {
+        const res = await fetch(`/api/repos?${params.toString()}`, {
+          signal: controller.signal,
+        });
+        const data = await res.json();
 
-    loadRepos();
-  }, [filters]);
+        let sorted = [...data];
+
+        // build comparators only for active filters
+        const rules = [
+          {
+            key: "stars",
+            cmp: (a: Repo, b: Repo) => a.stargazers_count - b.stargazers_count,
+          },
+          {
+            key: "issues",
+            cmp: (a: Repo, b: Repo) =>
+              a.open_issues_count - b.open_issues_count,
+          },
+          {
+            key: "activity",
+            cmp: (a: Repo, b: Repo) =>
+              new Date(a.pushed_at).getTime() - new Date(b.pushed_at).getTime(),
+          },
+          {
+            key: "forks",
+            cmp: (a: Repo, b: Repo) => a.forks_count - b.forks_count,
+          },
+        ].filter(
+          (r) =>
+            (filters as any)[r.key] === "asc" ||
+            (filters as any)[r.key] === "desc"
+        );
+
+        if (rules.length) {
+          sorted.sort((a, b) => {
+            for (const r of rules) {
+              const diff = r.cmp(a, b);
+              if (diff !== 0)
+                return (filters as any)[r.key] === "asc" ? diff : -diff;
+            }
+            return 0;
+          });
+        } else {
+          // sensible default
+          sorted.sort((a, b) => b.stargazers_count - a.stargazers_count);
+        }
+
+        setRepos(sorted);
+      } catch (e: any) {
+        if (e.name !== "AbortError") console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+
+    return () => controller.abort();
+  }, [page, debouncedQuery, filters]);
 
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-4">Open Source Repo Finder</h1>
+
+      {/* Search bar */}
+      <div className="mb-4 flex gap-2">
+        <input
+          type="text"
+          placeholder="Search by repo name..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="border px-3 py-2 rounded w-full"
+        />
+        <button
+          onClick={() => setDebouncedQuery(searchQuery.trim())} // ✅ manual trigger
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+        >
+          Search
+        </button>
+      </div>
+
+      {/* Filters */}
       <FilterBar filters={filters} setFilters={setFilters} />
+
       {loading ? (
         <p>Loading...</p>
       ) : (
@@ -110,6 +145,22 @@ export default function ReposPage() {
           ))}
         </div>
       )}
+      <div className="flex justify-center gap-4 mt-6">
+        <button
+          onClick={() => setPage((p) => Math.max(p - 1, 1))}
+          disabled={page === 1}
+          className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span className="px-4 py-2">Page {page}</span>
+        <button
+          onClick={() => setPage((p) => p + 1)}
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 }
