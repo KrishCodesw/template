@@ -1,78 +1,56 @@
-import React from "react";
-import { Repo, RepoFilters } from "../types/github";
-
-interface FiltersProps {
-  filters: Repo;
-  setFilters: (f: RepoFilters) => void;
-  languages: string[];
-}
-
-const Filters: React.FC<FiltersProps> = ({
-  filters,
-  setFilters,
-  languages,
-}) => {
+// app/repos/components/FilterBar.tsx
+export default function FilterBar({ filters, setFilters }: any) {
   return (
-    <>
-      <div className="flex flex-wrap gap-4 p-2 border-b bg-gray-50">
-        {/* Stars */}
-        <input
-          type="number"
-          placeholder="Min Stars"
-          value={filters.stargazers_count || ""}
-          onChange={(e) =>
-            setFilters({
-              ...filters,
-              stargazers_count: Number(e.target.value),
-            })
-          }
-          className="border p-1 rounded"
-        />
+    <div className="mb-4 flex flex-wrap gap-4">
+      {/* Tech bucket */}
+      <select
+        value={filters.stack}
+        onChange={(e) => setFilters({ ...filters, stack: e.target.value })}
+      >
+        <option value="javascript">JavaScript</option>
+        <option value="typescript">TypeScript</option>
+        <option value="python">Python</option>
+        <option value="java">Java</option>
+        <option value="go">Go</option>
+        <option value="rust">Rust</option>
+        <option value="solidity">Solidity</option>
+      </select>
 
-        {/* Forks */}
-        <input
-          type="number"
-          placeholder="Min Forks"
-          value={filters.forks_count || ""}
-          onChange={(e) =>
-            setFilters({
-              ...filters,
-              forks_count: Number(e.target.value),
-            })
-          }
-          className="border p-1 rounded"
-        />
+      {/* Stars */}
+      <select
+        value={filters.stars}
+        onChange={(e) => setFilters({ ...filters, stars: e.target.value })}
+      >
+        <option value="desc">Stars ↓</option>
+        <option value="asc">Stars ↑</option>
+      </select>
 
-        {/* Issues */}
-        <input
-          type="number"
-          placeholder="Min Issues"
-          value={filters.open_issues_count || ""}
-          onChange={(e) =>
-            setFilters({
-              ...filters,
-              open_issues_count: Number(e.target.value),
-            })
-          }
-          className="border p-1 rounded"
-        />
+      {/* Issues */}
+      <select
+        value={filters.issues}
+        onChange={(e) => setFilters({ ...filters, issues: e.target.value })}
+      >
+        <option value="desc">Issues ↓</option>
+        <option value="asc">Issues ↑</option>
+      </select>
 
-        {/* Language */}
-        <select
-          value={filters.language || ""}
-          onChange={(e) => setFilters({ ...filters, language: e.target.value })}
-          className="border p-1 rounded"
-        >
-          <option value="">All Languages</option>
-          {languages.map((lang) => (
-            <option key={lang} value={lang}>
-              {lang}
-            </option>
-          ))}
-        </select>
-      </div>
-    </>
+      {/* Activity */}
+      <select
+        value={filters.activity}
+        onChange={(e) => setFilters({ ...filters, activity: e.target.value })}
+      >
+        <option value="desc">Active ↓</option>
+        <option value="asc">Less Active ↑</option>
+      </select>
+
+      {/* Forks */}
+      <select
+        value={filters.forks}
+        onChange={(e) => setFilters({ ...filters, forks: e.target.value })}
+      >
+        <option value="desc">Forks ↓</option>
+        <option value="asc">Forks ↑</option>
+      </select>
+    </div>
   );
-};
-
-export default Filters;
+}
