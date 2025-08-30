@@ -59,7 +59,7 @@ export default function ReposPage() {
         });
         const data = await res.json();
 
-        let sorted = [...data];
+        const sorted = [...data];
 
         // build comparators only for active filters
         const rules = [

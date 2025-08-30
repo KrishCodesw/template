@@ -2,11 +2,11 @@ import axios from "axios";
 
 export async function fetchReposByStack(
   keyword: string,
-  language: string,
+  language: string="",
   sort: "stars" | "forks" | "updated" = "stars",
   order: "asc" | "desc" = "desc",
-  page:string,
-  per_page:string
+  page: string | number = "1",
+  per_page: string | number = "30"
 ){
 const url = `https://api.github.com/search/repositories?q=${keyword}+language:${language}&sort=${sort}&order=${order}&page=${page}&per_page=${per_page}`;
 
